@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.IO;
 
 namespace GetBingWallpaper
@@ -23,8 +24,10 @@ namespace GetBingWallpaper
                 HttpWebResponse hwrs = (HttpWebResponse)hwr.GetResponse();
                 using (StreamReader sr = new StreamReader(hwrs.GetResponseStream()))
                 {
-                    PicDownloader(JsonReader(sr.ReadToEnd()));
-                    Console.WriteLine("Downloaded {0} Pic", i);
+                    dynamic json = JObject.Parse(sr.ReadToEnd());
+                    string url = json.data.url;
+                    PicDownloader(url);
+                    Console.WriteLine("Downloaded {0} Pic", i + 1);
                 }
             }
         }
@@ -38,7 +41,8 @@ namespace GetBingWallpaper
             if (pic_response.StatusCode == HttpStatusCode.OK)
             {
                 Stream stream = pic_response.GetResponseStream();
-                string filename = url.Substring(35);
+                var uri = new System.Uri(url);
+                var filename = Path.GetFileName(uri.LocalPath);
                 string foldName = Path.Combine(Environment.CurrentDirectory, "download");
                 if (!Directory.Exists("download"))
                 {
@@ -61,12 +65,6 @@ namespace GetBingWallpaper
             {
             }
 
-        }
-
-        static string JsonReader(string jsonText)
-        {
-            NewJson data = JsonConvert.DeserializeObject<NewJson>(jsonText);
-            return data.Data.Url;
         }
     }
 
